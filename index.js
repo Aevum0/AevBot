@@ -5,8 +5,6 @@ const {
   AuditLogEvent
 } = require('discord.js');
 
-require('dotenv').config();
-
 const TOKEN = process.env.TOKEN;
 const WELCOME_CHANNEL_ID = '1488713959564509214';
 const ROLE_ID = '1488708681532178498';
