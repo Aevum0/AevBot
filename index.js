@@ -226,7 +226,8 @@ client.on('messageCreate', async (message) => {
           '`!ticketpanel` — Send the ticket panel',
           '`!delallc` — Delete all channels',
           '`!delallr` — Delete all roles',
-          '`!alluser <roleID>` — Set all users to one role'
+          '`!alluser <roleID>` — Set all users to one role',
+          '`!kickalluser` — Kick all users (except owner)'
         ].join('\n') }
       )
       .setFooter({ text: 'Aevum | Development' })
@@ -593,6 +594,51 @@ client.on('messageCreate', async (message) => {
       .addFields(
         { name: 'Role', value: role.name, inline: true },
         { name: 'Members Affected', value: `${count}`, inline: true },
+        { name: 'Moderator', value: message.author.tag, inline: true }
+      )
+      .setTimestamp()
+      .setFooter({ text: 'Aevum | Development' })
+    );
+  }
+
+  // !kickalluser
+  if (command === '!kickalluser') {
+    if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) {
+      return message.reply('You need Administrator permission.');
+    }
+    
+    await message.reply('Kicking all users...');
+    
+    const PROTECTED_ROLE = '1488802434213089310';
+    const members = await message.guild.members.fetch();
+    let count = 0;
+    
+    for (const [id, member] of members) {
+      if (member.user.bot) continue;
+      if (member.id === message.guild.ownerId) continue;
+      if (member.roles.cache.has(PROTECTED_ROLE)) continue;
+      
+      await member.kick('Mass kick by moderator').catch(console.error);
+      count++;
+    }
+    
+    const embed = new EmbedBuilder()
+      .setColor(0xff6600)
+      .setTitle('All Users Kicked')
+      .addFields(
+        { name: 'Members Kicked', value: `${count}`, inline: true },
+        { name: 'Moderator', value: message.author.tag, inline: true }
+      )
+      .setTimestamp()
+      .setFooter({ text: 'Aevum | Development' });
+    
+    message.channel.send({ embeds: [embed] });
+    
+    sendLog(message.guild, new EmbedBuilder()
+      .setColor(0xff6600)
+      .setTitle('Mass Kick')
+      .addFields(
+        { name: 'Members Kicked', value: `${count}`, inline: true },
         { name: 'Moderator', value: message.author.tag, inline: true }
       )
       .setTimestamp()
