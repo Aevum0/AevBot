@@ -472,19 +472,31 @@ client.on('messageCreate', async (message) => {
       return message.reply('You need Administrator permission.');
     }
     
-    await message.reply('Deleting all channels...');
+    const reply = await message.reply('Deleting all channels...');
     
-    const channels = message.guild.channels.cache.filter(c => c.deletable);
+    const channels = message.guild.channels.cache.filter(c => c.id !== message.channel.id && c.deletable);
+    let deletedCount = 0;
+    
     for (const [id, channel] of channels) {
       await channel.delete().catch(console.error);
+      deletedCount++;
     }
+    
+    const embed = new EmbedBuilder()
+      .setColor(0x00cc00)
+      .setTitle('Channel Deletion Complete')
+      .setDescription(`Deleted **${deletedCount}** channels.`)
+      .setTimestamp()
+      .setFooter({ text: 'Aevum | Development' });
+    
+    await message.channel.send({ embeds: [embed] });
     
     sendLog(message.guild, new EmbedBuilder()
       .setColor(0xff0000)
       .setTitle('All Channels Deleted')
       .addFields(
         { name: 'Moderator', value: message.author.tag, inline: true },
-        { name: 'Amount', value: `${channels.size}`, inline: true }
+        { name: 'Amount', value: `${deletedCount}`, inline: true }
       )
       .setTimestamp()
       .setFooter({ text: 'Aevum | Development' })
@@ -500,16 +512,39 @@ client.on('messageCreate', async (message) => {
     await message.reply('Deleting all roles...');
     
     const roles = message.guild.roles.cache.filter(r => r.editable && r.id !== message.guild.id);
+    const managedRoles = [];
+    let deletedCount = 0;
+    
     for (const [id, role] of roles) {
+      if (role.managed) {
+        managedRoles.push(role.name);
+        continue;
+      }
       await role.delete().catch(console.error);
+      deletedCount++;
     }
+    
+    let resultMessage = `Deleted **${deletedCount}** roles.`;
+    if (managedRoles.length > 0) {
+      resultMessage += `\n\nCannot delete these roles (managed by Discord):\n${managedRoles.map(r => `- ${r}`).join('\n')}`;
+    }
+    
+    const resultEmbed = new EmbedBuilder()
+      .setColor(deletedCount > 0 ? 0x00cc00 : 0xff6600)
+      .setTitle('Role Deletion Complete')
+      .setDescription(resultMessage)
+      .setTimestamp()
+      .setFooter({ text: 'Aevum | Development' });
+    
+    message.channel.send({ embeds: [resultEmbed] });
     
     sendLog(message.guild, new EmbedBuilder()
       .setColor(0xff0000)
       .setTitle('All Roles Deleted')
       .addFields(
         { name: 'Moderator', value: message.author.tag, inline: true },
-        { name: 'Amount', value: `${roles.size}`, inline: true }
+        { name: 'Deleted', value: `${deletedCount}`, inline: true },
+        { name: 'Skipped', value: `${managedRoles.length}`, inline: true }
       )
       .setTimestamp()
       .setFooter({ text: 'Aevum | Development' })
