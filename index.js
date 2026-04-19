@@ -222,7 +222,12 @@ client.on('messageCreate', async (message) => {
           '`!lock` — Lock the channel',
           '`!unlock` — Unlock the channel',
         ].join('\n') },
-        { name: 'Admin', value: '`!ticketpanel` — Send the ticket panel (Admin only)' }
+        { name: 'Admin', value: [
+          '`!ticketpanel` — Send the ticket panel',
+          '`!delallc` — Delete all channels',
+          '`!delallr` — Delete all roles',
+          '`!alluser <roleID>` — Set all users to one role'
+        ].join('\n') }
       )
       .setFooter({ text: 'Aevum | Development' })
       .setTimestamp();
@@ -454,6 +459,105 @@ client.on('messageCreate', async (message) => {
       .setTitle('Channel Unlocked')
       .addFields(
         { name: 'Channel', value: `<#${message.channel.id}>`, inline: true },
+        { name: 'Moderator', value: message.author.tag, inline: true }
+      )
+      .setTimestamp()
+      .setFooter({ text: 'Aevum | Development' })
+    );
+  }
+
+  // !delallc
+  if (command === '!delallc') {
+    if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) {
+      return message.reply('You need Administrator permission.');
+    }
+    
+    await message.reply('Deleting all channels...');
+    
+    const channels = message.guild.channels.cache.filter(c => c.deletable);
+    for (const [id, channel] of channels) {
+      await channel.delete().catch(console.error);
+    }
+    
+    sendLog(message.guild, new EmbedBuilder()
+      .setColor(0xff0000)
+      .setTitle('All Channels Deleted')
+      .addFields(
+        { name: 'Moderator', value: message.author.tag, inline: true },
+        { name: 'Amount', value: `${channels.size}`, inline: true }
+      )
+      .setTimestamp()
+      .setFooter({ text: 'Aevum | Development' })
+    );
+  }
+
+  // !delallr
+  if (command === '!delallr') {
+    if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) {
+      return message.reply('You need Administrator permission.');
+    }
+    
+    await message.reply('Deleting all roles...');
+    
+    const roles = message.guild.roles.cache.filter(r => r.editable && r.id !== message.guild.id);
+    for (const [id, role] of roles) {
+      await role.delete().catch(console.error);
+    }
+    
+    sendLog(message.guild, new EmbedBuilder()
+      .setColor(0xff0000)
+      .setTitle('All Roles Deleted')
+      .addFields(
+        { name: 'Moderator', value: message.author.tag, inline: true },
+        { name: 'Amount', value: `${roles.size}`, inline: true }
+      )
+      .setTimestamp()
+      .setFooter({ text: 'Aevum | Development' })
+    );
+  }
+
+  // !alluser
+  if (command === '!alluser') {
+    if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) {
+      return message.reply('You need Administrator permission.');
+    }
+    
+    const roleId = args[1];
+    if (!roleId) return message.reply('Please provide a role ID.');
+    
+    const role = message.guild.roles.cache.get(roleId);
+    if (!role) return message.reply('Invalid role ID.');
+    
+    await message.reply('Updating all members...');
+    
+    const members = await message.guild.members.fetch();
+    let count = 0;
+    
+    for (const [id, member] of members) {
+      if (member.user.bot) continue;
+      await member.roles.set([role]).catch(console.error);
+      count++;
+    }
+    
+    const embed = new EmbedBuilder()
+      .setColor(0x00cc00)
+      .setTitle('All Users Updated')
+      .addFields(
+        { name: 'Role', value: role.name, inline: true },
+        { name: 'Members', value: `${count}`, inline: true },
+        { name: 'Moderator', value: message.author.tag, inline: true }
+      )
+      .setTimestamp()
+      .setFooter({ text: 'Aevum | Development' });
+    
+    message.channel.send({ embeds: [embed] });
+    
+    sendLog(message.guild, new EmbedBuilder()
+      .setColor(0x00cc00)
+      .setTitle('Mass Role Update')
+      .addFields(
+        { name: 'Role', value: role.name, inline: true },
+        { name: 'Members Affected', value: `${count}`, inline: true },
         { name: 'Moderator', value: message.author.tag, inline: true }
       )
       .setTimestamp()
