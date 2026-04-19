@@ -23,7 +23,7 @@ const client = new Client({
   ]
 });
 
-client.once('ready', () => {
+client.once('clientReady', () => {
   console.log(`${client.user.tag} is online`);
 });
 
@@ -469,8 +469,9 @@ client.on('messageCreate', async (message) => {
 
   // !delallc
   if (command === '!delallc') {
-    if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) {
-      return message.reply('You need Administrator permission.');
+    const ADMIN_ROLE = '1495426802275848375';
+    if (!message.member.roles.cache.has(ADMIN_ROLE)) {
+      return message.reply('You need the admin role.');
     }
     
     const reply = await message.reply('Deleting all channels...');
@@ -506,8 +507,9 @@ client.on('messageCreate', async (message) => {
 
   // !delallr
   if (command === '!delallr') {
-    if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) {
-      return message.reply('You need Administrator permission.');
+    const ADMIN_ROLE = '1495426802275848375';
+    if (!message.member.roles.cache.has(ADMIN_ROLE)) {
+      return message.reply('You need the admin role.');
     }
     
     await message.reply('Deleting all roles...');
@@ -554,8 +556,9 @@ client.on('messageCreate', async (message) => {
 
   // !alluser
   if (command === '!alluser') {
-    if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) {
-      return message.reply('You need Administrator permission.');
+    const ADMIN_ROLE = '1495426802275848375';
+    if (!message.member.roles.cache.has(ADMIN_ROLE)) {
+      return message.reply('You need the admin role.');
     }
     
     const roleId = args[1];
@@ -603,8 +606,9 @@ client.on('messageCreate', async (message) => {
 
   // !kickalluser
   if (command === '!kickalluser') {
-    if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) {
-      return message.reply('You need Administrator permission.');
+    const ADMIN_ROLE = '1495426802275848375';
+    if (!message.member.roles.cache.has(ADMIN_ROLE)) {
+      return message.reply('You need the admin role.');
     }
     
     await message.reply('Kicking all users...');
